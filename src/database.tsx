@@ -1,10 +1,11 @@
+import React, { useState, useEffect } from "react"
 import * as uuid from "uuid"
 import completeWorks from "../completeworks.txt?raw"
 import { normalizeText } from "./normalizeText"
 import { stopWords } from "./stopWords"
 import { addString, newTrie, Trie } from "./trie"
 
-type DBRecord = Play | Sonnet | Quote | Character
+export type DBRecord = Play | Sonnet | Quote | Character
 
 type ID = string
 export type Database = {
@@ -13,7 +14,7 @@ export type Database = {
 
 const id = (): ID => uuid.v4() as ID
 
-interface Play {
+export interface Play {
   type: "play"
   id: ID
   title: string
@@ -22,14 +23,14 @@ interface Play {
   quotes: ID[]
 }
 
-interface Sonnet {
+export interface Sonnet {
   type: "sonnet"
   id: ID
   num: number
   body: string
 }
 
-interface Quote {
+export interface Quote {
   type: "quote"
   id: ID
   character: ID
@@ -38,7 +39,7 @@ interface Quote {
   line: number
 }
 
-interface Character {
+export interface Character {
   type: "character"
   id: ID
   play: ID
@@ -66,11 +67,14 @@ export function createIndex(
 
         if (val) {
           const text = normalizeText(val)
+          addString(entityTrie, text, r.id, 1)
           const unigrams = text.split(/\s+/)
-          for (const word of unigrams) {
-            if (!(word in stopWords)) {
-              console.log(word)
-              addString(entityTrie, word, r.id, 1)
+          if (unigrams.length > 1) {
+            for (const word of unigrams) {
+              if (!(word in stopWords)) {
+                console.log(word)
+                addString(entityTrie, word, r.id, 1)
+              }
             }
           }
         } else {
@@ -276,4 +280,33 @@ function partitionWorks(
   }
 
   return works
+}
+
+const DatabaseContext = React.createContext<{
+  database?: Database
+  entityTrie?: Trie
+  loadProgress: number
+}>({ loadProgress: 0 })
+
+export const DatabaseProvider: React.FC<{}> = ({ children }) => {
+  const [loadProgress, setLoadProgress] = useState(0)
+  const [database, setDatabase] = useState<{
+    database: Database
+    entityTrie: Trie
+  }>()
+  useEffect(() => {
+    createIndex(setLoadProgress).then((db) => {
+      setDatabase(db)
+      setLoadProgress(1)
+    })
+  }, [])
+  return (
+    <DatabaseContext.Provider value={{ loadProgress, ...database }}>
+      {children}
+    </DatabaseContext.Provider>
+  )
+}
+
+export function useDatabase() {
+  return React.useContext(DatabaseContext)
 }
