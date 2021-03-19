@@ -1,13 +1,30 @@
 /** @jsx jsx */
 import { jsx } from "@emotion/react"
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { FeatherLogo } from "./FeatherLogo"
 import { SearchIcon } from "./SearchIcon"
+import { createIndex, Database } from "./database"
+import { ShowHide } from "./Components/ShowHide"
+import { ProgressBar } from "./Components/ProgressBar"
+import * as lunr from "lunr"
 
 const lightGrey = "#DFDFDF"
 const darkGrey = "#686868"
 
 function App() {
+  const [loadProgress, setLoadProgress] = useState(0)
+  const [showingProgressBar, setShowingProgressBar] = useState(true)
+  const [showingSearchBar, setShowingSearchBar] = useState(false)
+  const searchIndex = useRef<lunr.Index>()
+  const databaseLookup = useRef<Database>()
+  useEffect(() => {
+    createIndex(setLoadProgress).then((index) => {
+      setShowingProgressBar(false)
+      setTimeout(() => setShowingSearchBar(true), 700)
+      searchIndex.current = index.index
+      databaseLookup.current = index.database
+    })
+  }, [])
   return (
     <div
       css={{
@@ -26,16 +43,47 @@ function App() {
           justifyContent: "center",
         }}
       >
-        <FeatherLogo />
-        <h1 css={{ fontSize: 36 }}>shakesearch</h1>
-        <SearchBox></SearchBox>
+        <div css={{ position: "absolute" }}>
+          <ShowHide show={showingProgressBar}>
+            <div
+              css={{ textAlign: "center", paddingTop: 30, paddingBottom: 20 }}
+            >
+              Creating search index...
+            </div>
+            <ProgressBar percentComplete={loadProgress * 100} />
+          </ShowHide>
+        </div>
+        <ShowHide show={showingSearchBar} translate>
+          <div
+            css={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+          >
+            <FeatherLogo />
+            <h1 css={{ fontSize: 36 }}>shakesearch</h1>
+            <SearchBox
+              onSearch={(q) => {
+                if (q.length > 2) {
+                  const results = searchIndex.current?.search(q + "~2")
+                  console.log(
+                    results?.map((v) => databaseLookup.current?.records[v.ref]),
+                  )
+                }
+              }}
+            ></SearchBox>
+          </div>
+        </ShowHide>
       </div>
       <div css={{ flex: 2.5 }}></div>
     </div>
   )
 }
 
-const SearchBox: React.FC<{}> = ({}) => {
+const SearchBox: React.FC<{ onSearch(query: string): void }> = ({
+  onSearch,
+}) => {
   const [isFocused, setIsFocused] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   return (
@@ -50,7 +98,7 @@ const SearchBox: React.FC<{}> = ({}) => {
         paddingLeft: 20,
         paddingRight: 20,
         transform: isFocused ? "translateY(-1px)" : undefined,
-        transition: "transform 0.3s ease, box-shadow 0.3s ease",
+        transition: "transform 0.2s ease, box-shadow 0.2s ease",
         boxShadow: isFocused ? "0px 3px 10px 0px rgba(0,0,0,0.1)" : undefined,
         cursor: "text",
       }}
@@ -62,6 +110,9 @@ const SearchBox: React.FC<{}> = ({}) => {
         ref={inputRef}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
+        onInput={async (e) => {
+          onSearch(e.currentTarget.value)
+        }}
         css={{
           outline: "none",
           border: "none",
