@@ -52,6 +52,7 @@ export function createIndex(
   const database = parseText(completeWorks)
   return new Promise((resolve) => {
     const entityTrie = newTrie()
+    const lexiconTrie = newTrie()
     ;(async () => {
       const keys = Object.keys(database.records)
       for (let i = 0; i < keys.length; i++) {
@@ -72,12 +73,20 @@ export function createIndex(
           if (unigrams.length > 1) {
             for (const word of unigrams) {
               if (!(word in stopWords)) {
-                console.log(word)
                 addString(entityTrie, word, r.id, 1)
               }
             }
           }
-        } else {
+        } else if (r.type === "quote") {
+          const text = normalizeText(r.body)
+          const unigrams = text.split(/\s+/)
+          if (unigrams.length > 1) {
+            for (const word of unigrams) {
+              if (!(word in stopWords)) {
+                addString(lexiconTrie, word, r.id, 1)
+              }
+            }
+          }
         }
 
         if (i % 500 === 0) {

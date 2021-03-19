@@ -4,7 +4,7 @@ import { Character, Play, Sonnet, useDatabase } from "./database"
 import React from "react"
 import GraphemeSplitter from "grapheme-splitter"
 import { normalizeText } from "./normalizeText"
-import { darkGrey, highlightBlue, lightGrey, superLightGrey } from "./colors"
+import { highlightBlue, superLightGrey } from "./colors"
 
 const SearchResult: React.FC<{ icon: React.ReactNode }> = ({
   icon,
@@ -24,8 +24,8 @@ const SearchResult: React.FC<{ icon: React.ReactNode }> = ({
         },
       }}
     >
-      <div css={{ flexBasis: 33 }}>{icon}</div>
-      <div css={{ fontSize: 14 }}>{children}</div>
+      <div css={{ flexBasis: 33, flexShrink: 0 }}>{icon}</div>
+      <div css={{ fontSize: 16, fontWeight: 300 }}>{children}</div>
     </div>
   )
 }
@@ -47,12 +47,13 @@ export const CharacterSearchResult: React.FC<{
           viewBox="0 0 15 16"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
+          css={{ position: "relative", top: 2 }}
         >
           <circle cx="7.87549" cy="4" r="3.5" stroke="black" />
           <mask id="path-2-inside-1" fill="white">
             <path
-              fill-rule="evenodd"
-              clip-rule="evenodd"
+              fillRule="evenodd"
+              clipRule="evenodd"
               d="M0.775146 13.1988C1.34693 9.79414 4.30821 7.2 7.8754 7.2C11.4428 7.2 14.4042 9.79444 14.9757 13.1994C13.1171 14.9366 10.6206 16 7.87576 16C5.1306 16 2.63387 14.9364 0.775146 13.1988Z"
             />
           </mask>
@@ -67,7 +68,7 @@ export const CharacterSearchResult: React.FC<{
       <div css={{ paddingBottom: 5 }}>
         {applyHighlight(character.name, query)}
       </div>
-      <div css={{ fontSize: 12 }}>{play.title}</div>
+      <div css={{ fontSize: 13 }}>{play.title}</div>
     </SearchResult>
   )
 }
@@ -115,7 +116,7 @@ export const PlaySearchResult: React.FC<{ play: Play; query: string }> = ({
         </svg>
       }
     >
-      {applyHighlight(play.title, query)}
+      <div style={{ paddingTop: 2 }}>{applyHighlight(play.title, query)}</div>
     </SearchResult>
   )
 }
@@ -141,7 +142,7 @@ export const SonnetSearchResult: React.FC<{
           <path
             d="M7 7L12 5.5M6 10L11 8.5M5 13L10 11.5"
             stroke="black"
-            stroke-width="0.5"
+            strokeWidth="0.5"
           />
         </svg>
       }

@@ -1,18 +1,17 @@
 import PriorityQueue from "priorityqueuejs"
-import similarity from "fast-levenshtein"
 import uniq from "lodash/uniq"
 
 type Terminal = [term: string, freq: number]
 
 export type Trie = {
   freq: number
-  terminals: Array<Terminal>
+  terminals: Record<string, number>
   children: {
     [c: string]: Trie | null
   }
 }
 export function newTrie(): Trie {
-  return { freq: 0, children: {}, terminals: [] }
+  return { freq: 0, children: {}, terminals: {} }
 }
 export function addString(
   trie: Trie,
@@ -31,11 +30,10 @@ export function addString(
     child.freq += freq
     node = child
   }
-  const terminal = node.terminals.find((t) => t[0] === terminalString)
-  if (terminal) {
-    terminal[1] += freq
+  if (terminalString in node.terminals) {
+    node.terminals[terminalString] += freq
   } else {
-    node.terminals.push([terminalString, freq])
+    node.terminals[terminalString] = freq
   }
 }
 export function getFrequency(trie: Trie, searchString: string) {
@@ -72,9 +70,9 @@ export function findMostFrequent(trie: Trie, searchString: string, n: number) {
   )
 }
 
-function findAllTerminals(node: Trie, result: Array<[string, number]> = []) {
+function findAllTerminals(node: Trie, result: Terminal[] = []) {
   if (node.terminals.length) {
-    result.push(...node.terminals)
+    result.push(...Object.entries(node.terminals))
   }
   for (const k of Object.keys(node.children)) {
     findAllTerminals(node.children[k]!, result)
@@ -140,9 +138,10 @@ function findNMostLikelyTerminals(node: Trie, n: number) {
       results.push(next)
     } else {
       for (const k of Object.keys(next.children)) {
-        queue.enq(next.children[k]!)
+        const child = next.children[k]!
+        queue.enq(child)
       }
-      for (const terminal of next.terminals) {
+      for (const terminal of Object.entries(next.terminals)) {
         queue.enq(terminal)
       }
     }

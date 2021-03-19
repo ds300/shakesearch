@@ -3,16 +3,10 @@ import { jsx } from "@emotion/react"
 import { useEffect, useRef, useState } from "react"
 import { FeatherLogo } from "./FeatherLogo"
 import { SearchIcon } from "./SearchIcon"
-import {
-  createIndex,
-  Database,
-  DatabaseProvider,
-  DBRecord,
-  useDatabase,
-} from "./database"
+import { DatabaseProvider, DBRecord, useDatabase } from "./database"
 import { ShowHide } from "./Components/ShowHide"
 import { ProgressBar } from "./Components/ProgressBar"
-import { fuzzySearch, Trie } from "./trie"
+import { fuzzySearch } from "./trie"
 import { normalizeText } from "./normalizeText"
 import React from "react"
 import {
@@ -108,8 +102,6 @@ const SearchBox: React.FC = () => {
           paddingRight: 20,
           cursor: "text",
           alignItems: "center",
-          // transform: searchResults.length ? "translateY(3px)" : undefined,
-          // transition: "transform 1s ease",
         }}
       >
         <SearchIcon />
@@ -142,6 +134,16 @@ const SearchBox: React.FC = () => {
           }}
           placeholder="Search for characters, quotes, etc..."
         />
+
+        <ShowHide show={Boolean(query)}>
+          <ClearButton
+            onClick={() => {
+              inputRef.current!.value = ""
+              setQuery("")
+              setSearchResults([])
+            }}
+          />
+        </ShowHide>
       </div>
       <div
         css={{
@@ -159,15 +161,49 @@ const SearchBox: React.FC = () => {
           {searchResults.map((r) => {
             switch (r.type) {
               case "character":
-                return <CharacterSearchResult character={r} query={query} />
+                return (
+                  <CharacterSearchResult
+                    key={r.id}
+                    character={r}
+                    query={query}
+                  />
+                )
               case "play":
-                return <PlaySearchResult play={r} query={query} />
+                return <PlaySearchResult key={r.id} play={r} query={query} />
               case "sonnet":
-                return <SonnetSearchResult sonnet={r} query={query} />
+                return (
+                  <SonnetSearchResult key={r.id} sonnet={r} query={query} />
+                )
             }
           })}
         </div>
       )}
+    </div>
+  )
+}
+
+const ClearButton: React.FC<{ onClick(): void }> = ({ onClick }) => {
+  return (
+    <div
+      onClick={onClick}
+      css={{
+        padding: 5,
+        position: "relative",
+        top: 1,
+        right: -5,
+        cursor: "pointer",
+      }}
+    >
+      <svg
+        width="14"
+        height="14"
+        viewBox="0 0 14 14"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path d="M1.00024 1L13.0001 12.9999" stroke="#686868" />
+        <path d="M12.9998 1L0.999875 12.9999" stroke="#686868" />
+      </svg>
     </div>
   )
 }
