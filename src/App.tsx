@@ -6,7 +6,8 @@ import { SearchIcon } from "./SearchIcon"
 import { createIndex, Database } from "./database"
 import { ShowHide } from "./Components/ShowHide"
 import { ProgressBar } from "./Components/ProgressBar"
-import * as lunr from "lunr"
+import { findExact, fuzzySearch, Trie } from "./trie"
+import { normalizeText } from "./normalizeText"
 
 const lightGrey = "#DFDFDF"
 const darkGrey = "#686868"
@@ -15,13 +16,13 @@ function App() {
   const [loadProgress, setLoadProgress] = useState(0)
   const [showingProgressBar, setShowingProgressBar] = useState(true)
   const [showingSearchBar, setShowingSearchBar] = useState(false)
-  const searchIndex = useRef<lunr.Index>()
+  const searchIndex = useRef<Trie>()
   const databaseLookup = useRef<Database>()
   useEffect(() => {
     createIndex(setLoadProgress).then((index) => {
       setShowingProgressBar(false)
       setTimeout(() => setShowingSearchBar(true), 700)
-      searchIndex.current = index.index
+      searchIndex.current = index.entityTrie
       databaseLookup.current = index.database
     })
   }, [])
@@ -65,10 +66,15 @@ function App() {
             <h1 css={{ fontSize: 36 }}>shakesearch</h1>
             <SearchBox
               onSearch={(q) => {
-                if (q.length > 2) {
-                  const results = searchIndex.current?.search(q + "~2")
+                if (q.trim().length > 2) {
+                  const results = fuzzySearch(
+                    searchIndex.current!,
+                    normalizeText(q.trim()),
+                    0,
+                    6,
+                  )
                   console.log(
-                    results?.map((v) => databaseLookup.current?.records[v.ref]),
+                    results?.map((v) => databaseLookup.current?.records[v]),
                   )
                 }
               }}

@@ -1,6 +1,8 @@
-import * as lunr from "lunr"
 import * as uuid from "uuid"
 import completeWorks from "../completeworks.txt?raw"
+import { normalizeText } from "./normalizeText"
+import { stopWords } from "./stopWords"
+import { addString, newTrie, Trie } from "./trie"
 
 type DBRecord = Play | Sonnet | Quote | Character
 
@@ -45,29 +47,42 @@ interface Character {
 
 export function createIndex(
   onLoadProgress: (progress: number) => void,
-): Promise<{ index: lunr.Index; database: Database }> {
+): Promise<{ entityTrie: Trie; database: Database }> {
   const database = parseText(completeWorks)
   return new Promise((resolve) => {
-    const builder = new lunr.Builder()
-    builder.field("body")
-    builder.field("type")
-    builder.ref("id")
+    const entityTrie = newTrie()
     ;(async () => {
       const keys = Object.keys(database.records)
       for (let i = 0; i < keys.length; i++) {
         const r = database.records[keys[i]]
-        builder.add({
-          id: r.id,
-          type: r.type,
-          body: r.type === "character" ? r.name : r.body,
-        })
+        const val =
+          r.type === "character"
+            ? r.name
+            : r.type === "play"
+            ? r.title
+            : r.type === "sonnet"
+            ? `Sonnet ${r.num}`
+            : null
 
-        if (i++ % 500 === 0) {
+        if (val) {
+          const text = normalizeText(val)
+          const unigrams = text.split(/\s+/)
+          for (const word of unigrams) {
+            if (!(word in stopWords)) {
+              console.log(word)
+              addString(entityTrie, word, r.id, 1)
+            }
+          }
+        } else {
+        }
+
+        if (i % 500 === 0) {
           onLoadProgress(i / keys.length)
           await new Promise((r) => requestAnimationFrame(r))
         }
       }
-      resolve({ index: builder.build(), database })
+      console.log({ entityTrie })
+      resolve({ entityTrie, database })
     })()
   })
 }
@@ -169,7 +184,7 @@ function parsePlay(database: Database, { title, lines }: Work): Play {
   return play
 }
 
-const stopWords = [
+const titleStopWords = [
   "to",
   "of",
   "a",
@@ -191,7 +206,7 @@ function capitalizeTitle(title: string) {
     .toLocaleLowerCase()
     .split(" ")
     .map((word, i) => {
-      if (i === 0 || !stopWords.includes(word)) {
+      if (i === 0 || !titleStopWords.includes(word)) {
         return capitalizeWord(word)
       }
       return word
