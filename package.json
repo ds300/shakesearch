@@ -12,6 +12,7 @@
     "@types/lunr": "^2.3.3",
     "elasticlunr": "^0.9.5",
     "fast-levenshtein": "^3.0.0",
+    "grapheme-splitter": "^1.0.4",
     "lodash": "^4.17.21",
     "lunr": "^2.3.9",
     "priorityqueuejs": "^2.0.0",

@@ -2,22 +2,38 @@
 import { jsx } from "@emotion/react"
 import { Character, Play, Sonnet, useDatabase } from "./database"
 import React from "react"
+import GraphemeSplitter from "grapheme-splitter"
+import { normalizeText } from "./normalizeText"
+import { darkGrey, highlightBlue, lightGrey, superLightGrey } from "./colors"
 
 const SearchResult: React.FC<{ icon: React.ReactNode }> = ({
   icon,
   children,
 }) => {
   return (
-    <div css={{ display: "flex", paddingTop: 20 }}>
+    <div
+      css={{
+        display: "flex",
+        paddingLeft: 20,
+        paddingright: 20,
+        paddingTop: 10,
+        paddingBottom: 10,
+        ":hover": {
+          backgroundColor: superLightGrey,
+          cursor: "pointer",
+        },
+      }}
+    >
       <div css={{ flexBasis: 33 }}>{icon}</div>
       <div css={{ fontSize: 14 }}>{children}</div>
     </div>
   )
 }
 
-export const CharacterSearchResult: React.FC<{ character: Character }> = ({
-  character,
-}) => {
+export const CharacterSearchResult: React.FC<{
+  character: Character
+  query: string
+}> = ({ character, query }) => {
   const { database } = useDatabase()
 
   const play = database?.records[character.play] as Play
@@ -48,13 +64,18 @@ export const CharacterSearchResult: React.FC<{ character: Character }> = ({
         </svg>
       }
     >
-      <div css={{ paddingBottom: 5 }}>{character.name}</div>
+      <div css={{ paddingBottom: 5 }}>
+        {applyHighlight(character.name, query)}
+      </div>
       <div css={{ fontSize: 12 }}>{play.title}</div>
     </SearchResult>
   )
 }
 
-export const PlaySearchResult: React.FC<{ play: Play }> = ({ play }) => {
+export const PlaySearchResult: React.FC<{ play: Play; query: string }> = ({
+  play,
+  query,
+}) => {
   return (
     <SearchResult
       icon={
@@ -64,6 +85,10 @@ export const PlaySearchResult: React.FC<{ play: Play }> = ({ play }) => {
           viewBox="0 0 23 22"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
+          css={{
+            position: "relative",
+            left: -3,
+          }}
         >
           <path
             d="M4.12918 12.6528C2.30497 10.5956 1.14845 3.90402 1.14845 3.90402C5.7412 4.78072 7.96003 4.18708 11.8379 1.03979C11.8379 1.03979 14.1822 7.4131 13.6309 10.1068C13.0797 12.8005 10.3121 16.7245 10.3121 16.7245C10.3121 16.7245 5.95339 14.71 4.12918 12.6528Z"
@@ -90,14 +115,15 @@ export const PlaySearchResult: React.FC<{ play: Play }> = ({ play }) => {
         </svg>
       }
     >
-      {play.title}
+      {applyHighlight(play.title, query)}
     </SearchResult>
   )
 }
 
-export const SonnetSearchResult: React.FC<{ sonnet: Sonnet }> = ({
-  sonnet,
-}) => {
+export const SonnetSearchResult: React.FC<{
+  sonnet: Sonnet
+  query: string
+}> = ({ sonnet, query }) => {
   return (
     <SearchResult
       icon={
@@ -120,7 +146,55 @@ export const SonnetSearchResult: React.FC<{ sonnet: Sonnet }> = ({
         </svg>
       }
     >
-      Sonnet {sonnet.num}
+      {applyHighlight(`Sonnet ${sonnet.num}`, query)}
     </SearchResult>
+  )
+}
+
+const splitter = new GraphemeSplitter()
+
+function applyHighlight(displayLabel: string, highlight: string | undefined) {
+  // If highlight is not supplied then use medium weight, since the search result
+  // is being rendered in a context that doesn't support highlights
+  if (highlight === undefined || !highlight.trim()) {
+    return <React.Fragment>{displayLabel}</React.Fragment>
+  }
+  // search for `highlight` in `displayLabel` but ignore diacritics in `displayLabel`
+  // so that a user can type, e.g. `Miro` and see `Miró` highlighted
+  const labelGraphemes = splitter.splitGraphemes(displayLabel)
+  const highlightGraphemes = splitter.splitGraphemes(highlight)
+  let result: [string, string, string] | null = null
+  outerLoop: for (let i = 0; i < labelGraphemes.length; i++) {
+    innerLoop: for (let j = 0; j < highlightGraphemes.length; j++) {
+      if (i + j >= labelGraphemes.length) {
+        continue outerLoop
+      }
+      const labelGrapheme = normalizeText(labelGraphemes[i + j])
+      const highlightGrapheme = normalizeText(highlightGraphemes[j])
+      if (labelGrapheme === highlightGrapheme) {
+        // might be a match, continue to see for sure
+        continue innerLoop
+      } else {
+        // not a match so go on to the next grapheme in the label
+        continue outerLoop
+      }
+    }
+    // innerloop eneded naturally so there was a match
+    result = [
+      labelGraphemes.slice(0, i).join(""),
+      labelGraphemes.slice(i, i + highlightGraphemes.length).join(""),
+      labelGraphemes.slice(i + highlightGraphemes.length).join(""),
+    ]
+    break outerLoop
+  }
+  if (!result) {
+    return <React.Fragment>{displayLabel}</React.Fragment>
+  }
+  return (
+    <React.Fragment>
+      {result[0]}
+      <span css={{ fontWeight: 600, color: highlightBlue }}>{result[1]}</span>
+      {result[2]}
+    </React.Fragment>
   )
 }

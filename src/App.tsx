@@ -20,9 +20,7 @@ import {
   PlaySearchResult,
   SonnetSearchResult,
 } from "./searchResults"
-
-const lightGrey = "#DFDFDF"
-const darkGrey = "#686868"
+import { darkGrey, lightGrey } from "./colors"
 
 function App() {
   const { loadProgress } = useDatabase()
@@ -42,10 +40,9 @@ function App() {
         flexDirection: "column",
       }}
     >
-      <div css={{ flex: 0, flexBasis: "20vh" }}></div>
+      <div css={{ height: "20vh" }}></div>
       <div
         css={{
-          flex: 1,
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
@@ -76,7 +73,7 @@ function App() {
           </div>
         </ShowHide>
       </div>
-      <div css={{ flex: 2.5, flexShrink: 1 }}></div>
+      <div css={{ flex: 1, flexShrink: 1 }}></div>
     </div>
   )
 }
@@ -87,6 +84,7 @@ const SearchBox: React.FC = () => {
   const { database, entityTrie } = useDatabase()
   const [searchResults, setSearchResults] = useState<DBRecord[]>([])
   const [query, setQuery] = useState("")
+  const isRaised = isFocused || searchResults.length > 0
   return (
     <div
       css={{
@@ -96,12 +94,9 @@ const SearchBox: React.FC = () => {
         width: 360,
         display: "flex",
         flexDirection: "column",
-        paddingLeft: 20,
-        paddingRight: 20,
-        paddingBottom: searchResults.length ? 20 : 0,
-        transform: isFocused ? "translateY(-1px)" : undefined,
+        transform: isRaised ? "translateY(-1px)" : undefined,
         transition: "transform 0.2s ease, box-shadow 0.2s ease",
-        boxShadow: isFocused ? "0px 3px 10px 0px rgba(0,0,0,0.1)" : undefined,
+        boxShadow: isRaised ? "0px 3px 10px 0px rgba(0,0,0,0.1)" : undefined,
       }}
       onClick={() => inputRef.current?.focus()}
     >
@@ -109,7 +104,8 @@ const SearchBox: React.FC = () => {
         css={{
           display: "flex",
           height: 45,
-          width: "100%",
+          paddingLeft: 20,
+          paddingRight: 20,
           cursor: "text",
           alignItems: "center",
           // transform: searchResults.length ? "translateY(3px)" : undefined,
@@ -158,16 +154,20 @@ const SearchBox: React.FC = () => {
           opacity: searchResults.length ? 0.5 : 0,
         }}
       ></div>
-      {searchResults.map((r) => {
-        switch (r.type) {
-          case "character":
-            return <CharacterSearchResult character={r} />
-          case "play":
-            return <PlaySearchResult play={r} />
-          case "sonnet":
-            return <SonnetSearchResult sonnet={r} />
-        }
-      })}
+      {searchResults.length > 0 && (
+        <div css={{ paddingTop: 10, paddingBottom: 10 }}>
+          {searchResults.map((r) => {
+            switch (r.type) {
+              case "character":
+                return <CharacterSearchResult character={r} query={query} />
+              case "play":
+                return <PlaySearchResult play={r} query={query} />
+              case "sonnet":
+                return <SonnetSearchResult sonnet={r} query={query} />
+            }
+          })}
+        </div>
+      )}
     </div>
   )
 }
