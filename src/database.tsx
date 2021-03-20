@@ -80,11 +80,10 @@ export function createIndex(
         if (val) {
           const text = normalizeText(val)
           addString(entityTrie, text, r.id, 1)
-          const unigrams = text.split(/\s+/)
-          if (unigrams.length > 1) {
-            for (const word of unigrams) {
-              addString(entityTrie, word, r.id, 1)
-            }
+          let i = text.indexOf(" ")
+          while (i !== -1) {
+            addString(entityTrie, text.slice(i + 1), r.id, 1)
+            i = text.indexOf(" ", i + 1)
           }
         } else if (r.type === "quote") {
           const unigrams = r.body.split(/\s+/)

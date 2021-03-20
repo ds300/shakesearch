@@ -2,7 +2,7 @@
 import { jsx } from "@emotion/react"
 import React, { useRef, useState } from "react"
 import { darkGrey, lightGrey } from "../colors"
-import { useDatabase } from "../database"
+import { DBRecord, ID, useDatabase } from "../database"
 import { SearchIcon } from "../Icons/SearchIcon"
 import { XIcon } from "../Icons/XIcon"
 import { normalizeText } from "../normalizeText"
@@ -10,15 +10,39 @@ import { fuzzySearch } from "../trie"
 import { QuickSearchResult } from "./QuickSearchResult"
 import { ShowHide } from "./ShowHide"
 import { Spacer } from "./Spacer"
+import * as levenshtein from "fast-levenshtein"
 
 export const SearchBox: React.FC = () => {
   const [isFocused, setIsFocused] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
-  const { entityTrie } = useDatabase()
+  const { entityTrie, database } = useDatabase()
   const [searchResults, setSearchResults] = useState<string[]>([])
   const [query, setQuery] = useState("")
   const isRaised = isFocused || searchResults.length > 0
   const [activeSearchResultIndex, setActiveSearchResultIndex] = useState(-1)
+  const searchResultComparator = (query: string, a: ID, b: ID) => {
+    const labelA = getSearchResultName(database?.records[a]!)
+    const labelB = getSearchResultName(database?.records[b]!)
+    const labelAPrefixMatch = labelA.startsWith(query)
+    const labelBPrefixMatch = labelB.startsWith(query)
+    if (labelAPrefixMatch && !labelBPrefixMatch) {
+      return -1
+    }
+    if (!labelAPrefixMatch && labelBPrefixMatch) {
+      return 1
+    }
+    const exactMatchA = labelA.includes(query)
+    const exactMatchB = labelB.includes(query)
+    if (exactMatchA && !exactMatchB) {
+      return -1
+    }
+    if (!exactMatchA && exactMatchB) {
+      return 1
+    }
+    const labelADist = levenshtein.get(labelA, query)
+    const labelBDist = levenshtein.get(labelB, query)
+    return labelADist - labelBDist
+  }
   return (
     <div
       css={{
@@ -68,8 +92,9 @@ export const SearchBox: React.FC = () => {
             setQuery(query)
             setActiveSearchResultIndex(-1)
             if (query.length >= 1) {
-              const ids = fuzzySearch(entityTrie!, normalizeText(query), 1, 4)
-              setSearchResults(ids)
+              const ids = fuzzySearch(entityTrie!, normalizeText(query), 1, 16)
+              ids.sort(searchResultComparator.bind(null, normalizeText(query)))
+              setSearchResults(ids.slice(0, 3))
             } else {
               setSearchResults([])
             }
@@ -119,6 +144,19 @@ export const SearchBox: React.FC = () => {
       )}
     </div>
   )
+}
+
+const getSearchResultName = (record: DBRecord) => {
+  switch (record.type) {
+    case "play":
+      return normalizeText(record.title)
+    case "character":
+      return normalizeText(record.name)
+    case "sonnet":
+      return "sonnet " + record.num
+    default:
+      return ""
+  }
 }
 
 const ClearButton: React.FC<{ onClick(): void }> = ({ onClick }) => {
