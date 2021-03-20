@@ -137,10 +137,14 @@ function applyHighlight(
   const results: React.ReactNode[] = []
   for (const contextRange of contextRanges) {
     let offset = contextRange.start
+    if (contextRange.start !== 0) {
+      results.push(" ...")
+    }
     for (const highlightRange of contextRange.highlightRanges) {
       if (highlightRange.start > offset) {
         results.push(textGraphemes.slice(offset, highlightRange.start).join(""))
       }
+
       results.push(
         highlightText(
           textGraphemes
@@ -152,7 +156,11 @@ function applyHighlight(
       offset = highlightRange.end
     }
     if (offset < contextRange.end) {
-      results.push(textGraphemes.slice(offset, contextRange.end))
+      results.push(textGraphemes.slice(offset, contextRange.end).join(""))
+    }
+
+    if (contextRange.end !== textGraphemes.length) {
+      results.push("... ")
     }
   }
   return React.createElement(React.Fragment, null, ...results)
