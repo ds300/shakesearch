@@ -10,7 +10,13 @@ export function fullTextSearch(
   const startTime = Date.now()
   const words = normalizeText(query.trim()).split(/\s+/g)
   const searchResults = {
-    results: [] as ID[],
+    results: {
+      all: [] as ID[],
+      sonnet: [] as ID[],
+      play: [] as ID[],
+      character: [] as ID[],
+      quote: [] as ID[],
+    },
     originalWords: words.slice(0),
     searchWords: words,
   }
@@ -48,9 +54,13 @@ export function fullTextSearch(
   }
   // rank matches
 
-  searchResults.results = intersection
+  searchResults.results.all = intersection
+
+  for (const result of searchResults.results.all) {
+    const record = database.records[result]!
+    searchResults.results[record.type].push(result)
+  }
 
   console.log("took", Date.now() - startTime, "ms")
-
   return searchResults
 }

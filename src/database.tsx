@@ -85,13 +85,15 @@ export function createIndex(
             addString(entityTrie, text.slice(i + 1), r.id, 1)
             i = text.indexOf(" ", i + 1)
           }
+          const unigrams = text.split(/\s+/)
+          for (const word of unigrams) {
+            addString(lexiconTrie, word, r.id, 1)
+          }
         }
         if (r.type === "quote" || r.type === "sonnet") {
-          const unigrams = r.body.split(/\s+/)
-          if (unigrams.length > 1) {
-            for (const word of unigrams) {
-              addString(lexiconTrie, word, r.id, 1)
-            }
+          const unigrams = normalizeText(r.body).split(/\s+/)
+          for (const word of unigrams) {
+            addString(lexiconTrie, word, r.id, 1)
           }
         }
 

@@ -14,7 +14,9 @@ import * as levenshtein from "fast-levenshtein"
 import { useHistory } from "react-router"
 import { stringify } from "qs"
 
-export const SearchBox: React.FC = () => {
+export const SearchBox: React.FC<{ hideResultsWhenNotFocused?: boolean }> = ({
+  hideResultsWhenNotFocused,
+}) => {
   const history = useHistory()
   const [isFocused, setIsFocused] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -50,107 +52,132 @@ export const SearchBox: React.FC = () => {
     <div
       css={{
         position: "relative",
-        borderRadius: 45 / 2,
-        border: `1px solid ${lightGrey}`,
         width: 360,
-        display: "flex",
-        flexDirection: "column",
-        transform: isRaised ? "translateY(-1px)" : undefined,
-        transition: "transform 0.2s ease, box-shadow 0.2s ease",
-        boxShadow: isRaised ? "0px 3px 10px 0px rgba(0,0,0,0.1)" : undefined,
+        height: 45,
       }}
-      onClick={() => inputRef.current?.focus()}
     >
       <div
         css={{
+          position: "absolute",
+          borderRadius: 45 / 2,
+          border: `1px solid ${lightGrey}`,
+          top: 0,
+          left: 0,
+          right: 0,
+          backgroundColor: "white",
           display: "flex",
-          height: 45,
-          paddingLeft: 20,
-          paddingRight: 20,
-          cursor: "text",
-          alignItems: "center",
+          flexDirection: "column",
+          transform: isRaised ? "translateY(-1px)" : undefined,
+          transition: "transform 0.2s ease, box-shadow 0.2s ease",
+          boxShadow: isRaised ? "0px 3px 10px 0px rgba(0,0,0,0.1)" : undefined,
+          overflow: "hidden",
+        }}
+        onClick={() => {
+          inputRef.current?.focus()
         }}
       >
-        <SearchIcon />
-        <Spacer size={15} />
-        <input
-          ref={inputRef}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
-          onKeyDown={(e) => {
-            if (e.key === "ArrowDown") {
-              e.preventDefault()
-              setActiveSearchResultIndex((i) =>
-                Math.min(i + 1, searchResults.length - 1),
-              )
-            } else if (e.key === "ArrowUp") {
-              e.preventDefault()
-              setActiveSearchResultIndex((i) => Math.max(i - 1, -1))
-            } else if (e.key === "Enter") {
-              history.push(
-                activeSearchResultIndex === -1
-                  ? "/results?" + stringify({ query })
-                  : `/page/${searchResults[activeSearchResultIndex]}`,
-              )
-            }
-          }}
-          onInput={async (e) => {
-            const query = e.currentTarget.value.trim()
-            setQuery(query)
-            setActiveSearchResultIndex(-1)
-            if (query.length >= 1) {
-              const ids = fuzzySearch(entityTrie!, normalizeText(query), 1, 16)
-              ids.sort(searchResultComparator.bind(null, normalizeText(query)))
-              setSearchResults(ids.slice(0, 3))
-            } else {
-              setSearchResults([])
-            }
-          }}
+        <div
           css={{
-            outline: "none",
-            border: "none",
-            flex: 1,
-            fontSize: 16,
-            "::placeholder": {
-              color: darkGrey,
-              fontWeight: 300,
-            },
-            fontWeight: 400,
+            display: "flex",
+            height: 45,
+            paddingLeft: 20,
+            paddingRight: 20,
+            cursor: "text",
+            alignItems: "center",
           }}
-          placeholder="Search for characters, quotes, etc..."
-        />
-
-        <ShowHide show={Boolean(query)}>
-          <ClearButton
-            onClick={() => {
-              inputRef.current!.value = ""
-              setQuery("")
-              setSearchResults([])
-              setActiveSearchResultIndex(-1)
+        >
+          <SearchIcon />
+          <Spacer size={15} />
+          <input
+            ref={inputRef}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
+            onKeyDown={(e) => {
+              if (e.key === "ArrowDown") {
+                e.preventDefault()
+                setActiveSearchResultIndex((i) =>
+                  Math.min(i + 1, searchResults.length - 1),
+                )
+              } else if (e.key === "ArrowUp") {
+                e.preventDefault()
+                setActiveSearchResultIndex((i) => Math.max(i - 1, -1))
+              } else if (e.key === "Enter") {
+                inputRef.current?.blur()
+                history.push(
+                  activeSearchResultIndex === -1
+                    ? "/results?" + stringify({ query })
+                    : `/page/${searchResults[activeSearchResultIndex]}`,
+                )
+              }
             }}
+            onInput={async (e) => {
+              const query = e.currentTarget.value.trim()
+              setQuery(query)
+              setActiveSearchResultIndex(-1)
+              if (query.length >= 1) {
+                const ids = fuzzySearch(
+                  entityTrie!,
+                  normalizeText(query),
+                  1,
+                  16,
+                )
+                ids.sort(
+                  searchResultComparator.bind(null, normalizeText(query)),
+                )
+                setSearchResults(ids.slice(0, 3))
+              } else {
+                setSearchResults([])
+              }
+            }}
+            css={{
+              outline: "none",
+              border: "none",
+              flex: 1,
+              fontSize: 16,
+              "::placeholder": {
+                color: darkGrey,
+                fontWeight: 300,
+              },
+              fontWeight: 400,
+            }}
+            placeholder="Search for characters, quotes, etc..."
           />
-        </ShowHide>
-      </div>
-      {searchResults.length > 0 && (
-        <div css={{ paddingBottom: 10 }}>
-          <QuickSearchResult
-            query={query}
-            active={activeSearchResultIndex === -1}
-            onHover={() => setActiveSearchResultIndex(-1)}
-            onClick={() => history.push("/results?" + stringify({ query }))}
-          />
-          {searchResults.map((id, i) => (
-            <QuickSearchResult
-              key={id}
-              entityID={id}
-              query={query}
-              active={activeSearchResultIndex === i}
-              onHover={() => setActiveSearchResultIndex(i)}
-              onClick={() => history.push("/page/" + id)}
+
+          <ShowHide show={Boolean(query)}>
+            <ClearButton
+              onClick={() => {
+                inputRef.current!.value = ""
+                setQuery("")
+                setSearchResults([])
+                setActiveSearchResultIndex(-1)
+              }}
             />
-          ))}
+          </ShowHide>
         </div>
-      )}
+        {(isFocused || !hideResultsWhenNotFocused) && searchResults.length > 0 && (
+          <div css={{ paddingBottom: 10 }}>
+            <QuickSearchResult
+              query={query}
+              active={activeSearchResultIndex === -1}
+              onHover={() => setActiveSearchResultIndex(-1)}
+              onClick={() => {
+                console.log("pushing!")
+                history.push("/results?" + stringify({ query }))
+              }}
+            />
+            {searchResults.map((id, i) => (
+              <QuickSearchResult
+                key={id}
+                entityID={id}
+                query={query}
+                active={activeSearchResultIndex === i}
+                onHover={() => setActiveSearchResultIndex(i)}
+                onClick={() => history.push("/page/" + id)}
+              />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

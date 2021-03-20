@@ -2,30 +2,64 @@
 import { jsx } from "@emotion/react"
 import GraphemeSplitter from "grapheme-splitter"
 import uniq from "lodash/uniq"
+import compact from "lodash/compact"
 import { parse } from "qs"
-import React from "react"
+import React, { useMemo } from "react"
 import { useLocation } from "react-router"
-import { Character, useDatabase } from "../database"
+import { PageWithHeader } from "../Components/PageWithHeader"
+import { Toolbar } from "../Components/Toolbar"
+import { Character, DBRecord, useDatabase } from "../database"
 import { fullTextSearch } from "../fullTextSearch"
 import { normalizeText } from "../normalizeText"
 
+const makeTabConfig = (name: string, hash: string, count: number) =>
+  count > 0
+    ? {
+        id: hash,
+        name,
+        count,
+        onClick() {
+          window.location.hash = hash
+        },
+      }
+    : undefined
 export const Results: React.FC<{}> = () => {
-  const { query } = parse(useLocation().search.slice(1))
+  const { query } = parse(useLocation().search.slice(1)) as { query: string }
+  const hash = (useLocation().hash?.slice(1) || "all") as
+    | DBRecord["type"]
+    | "all"
   const { lexiconTrie, database } = useDatabase()
-  const results = fullTextSearch(lexiconTrie!, database!, query as string)
+  const { results, searchWords } = useMemo(
+    () => fullTextSearch(lexiconTrie!, database!, query as string),
+    [database, query, lexiconTrie],
+  )
+
+  const tabs = compact([
+    makeTabConfig("All", "all", results.all.length),
+    makeTabConfig("Quotes", "quote", results.quote.length),
+    makeTabConfig("Characters", "character", results.character.length),
+    makeTabConfig("Sonnets", "sonnet", results.sonnet.length),
+    makeTabConfig("Plays", "play", results.play.length),
+  ])
+
+  console.log({ hash })
+  const resultsToDisplay = results[hash]
+
   return (
-    <div>
+    <PageWithHeader>
+      <Toolbar
+        tabs={tabs}
+        activeTabIndex={tabs.findIndex((t) => t.id === hash)}
+      />
       Results for {query} at {useLocation().search}
-      {results.results.slice(0, 10).map((id) => {
+      {resultsToDisplay.slice(0, 10).map((id) => {
         const record = database?.records[id]!
         switch (record.type) {
           case "sonnet":
             return (
               <div key={record.id}>
                 Sonnet {record.num}
-                <div>
-                  {applyHighlight(record.body, results.searchWords, 50)}
-                </div>
+                <div>{applyHighlight(record.body, searchWords, 50)}</div>
               </div>
             )
           case "quote":
@@ -33,14 +67,12 @@ export const Results: React.FC<{}> = () => {
               <div key={record.id}>
                 Quote by{" "}
                 {(database?.records[record.character] as Character).name}
-                <div>
-                  {applyHighlight(record.body, results.searchWords, 50)}
-                </div>
+                <div>{applyHighlight(record.body, searchWords, 50)}</div>
               </div>
             )
         }
       })}
-    </div>
+    </PageWithHeader>
   )
 }
 
@@ -172,8 +204,6 @@ function highlightText(text: string) {
       css={{
         fontWeight: 600,
         backgroundColor: "rgb(255, 242, 213)",
-        paddingLeft: 2,
-        paddingRight: 2,
         borderRadius: 4,
       }}
     >
