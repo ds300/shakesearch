@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from "react"
-import * as uuid from "uuid"
 import completeWorks from "../completeworks.txt?raw"
 import { normalizeText } from "./normalizeText"
-import { stopWords } from "./stopWords"
 import { addString, newTrie, Trie } from "./trie"
 
 export type DBRecord = Play | Sonnet | Quote | Character
@@ -12,7 +10,20 @@ export type Database = {
   records: Record<ID, DBRecord>
 }
 
-const id = (): ID => uuid.v4() as ID
+const _slugs = new Set()
+const slug = (name: string): ID => {
+  const slug = normalizeText(name).replace(/\W/g, "-")
+  if (!_slugs.has(slug)) {
+    return slug
+  }
+  let i = 1
+  let proposal = slug
+  while (_slugs.has(proposal)) {
+    proposal = slug + "-" + i++
+  }
+
+  return proposal
+}
 
 export interface Play {
   type: "play"
@@ -72,19 +83,14 @@ export function createIndex(
           const unigrams = text.split(/\s+/)
           if (unigrams.length > 1) {
             for (const word of unigrams) {
-              if (!(word in stopWords)) {
-                addString(entityTrie, word, r.id, 1)
-              }
+              addString(entityTrie, word, r.id, 1)
             }
           }
         } else if (r.type === "quote") {
-          const text = normalizeText(r.body)
-          const unigrams = text.split(/\s+/)
+          const unigrams = r.body.split(/\s+/)
           if (unigrams.length > 1) {
             for (const word of unigrams) {
-              if (!(word in stopWords)) {
-                addString(lexiconTrie, word, r.id, 1)
-              }
+              addString(lexiconTrie, word, r.id, 1)
             }
           }
         }
@@ -140,7 +146,7 @@ interface Work {
 function parsePlay(database: Database, { title, lines }: Work): Play {
   const play: Play = {
     type: "play",
-    id: id(),
+    id: slug(title),
     title: capitalizeTitle(title),
     characters: [],
     quotes: [],
@@ -156,7 +162,7 @@ function parsePlay(database: Database, { title, lines }: Work): Play {
     } else {
       const character: Character = {
         type: "character",
-        id: id(),
+        id: slug(name),
         name,
         play: play.id,
       }
@@ -181,7 +187,7 @@ function parsePlay(database: Database, { title, lines }: Work): Play {
       }
       const quote: Quote = {
         type: "quote",
-        id: id(),
+        id: slug(play.title + "-" + character),
         play: play.id,
         character,
         body: lines.slice(start, end).join("\n").trim(),
@@ -236,7 +242,7 @@ function parseSonnets(database: Database, lines: string[]) {
       if (chunk.length) {
         const sonnet: Sonnet = {
           type: "sonnet",
-          id: id(),
+          id: slug("sonnet-" + num),
           num,
           body: chunk.join("\n"),
         }
