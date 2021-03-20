@@ -1,17 +1,19 @@
 import PriorityQueue from "priorityqueuejs"
+import * as levenshtein from "fast-levenshtein"
 import uniq from "lodash/uniq"
 
 type Terminal = [term: string, freq: number]
 
 export type Trie = {
   freq: number
+  prefix: string
   terminals: Record<string, number>
   children: {
     [c: string]: Trie | null
   }
 }
-export function newTrie(): Trie {
-  return { freq: 0, children: {}, terminals: {} }
+export function newTrie(prefix: string): Trie {
+  return { freq: 0, prefix, children: {}, terminals: {} }
 }
 export function addString(
   trie: Trie,
@@ -25,7 +27,7 @@ export function addString(
     const char = searchString[i]
     let child = node.children[char]
     if (!child) {
-      child = node.children[char] = newTrie()
+      child = node.children[char] = newTrie(searchString.slice(0, i + 1))
     }
     child.freq += freq
     node = child
@@ -172,8 +174,25 @@ export function findExact(node: Trie, query: string) {
     node = node.children[query[0]]!
     query = query.slice(1)
     if (query.length === 0 && node) {
-      return node.terminals
+      return Object.entries(node.terminals)
     }
   }
   return []
+}
+
+export function findNearestWord(node: Trie, word: string) {
+  const candidates = []
+  for (const neighbourNode of _fuzzySearch(
+    node,
+    word,
+    word.length > 8 ? 3 : 2,
+  )) {
+    if (Object.entries(neighbourNode.terminals).length > 1) {
+      candidates.push(neighbourNode.prefix)
+    }
+  }
+  candidates.sort((a, b) => {
+    return levenshtein.get(a, word) - levenshtein.get(b, word)
+  })
+  return candidates[0]
 }

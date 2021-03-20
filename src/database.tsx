@@ -59,11 +59,11 @@ export interface Character {
 
 export function createIndex(
   onLoadProgress: (progress: number) => void,
-): Promise<{ entityTrie: Trie; database: Database }> {
+): Promise<{ entityTrie: Trie; database: Database; lexiconTrie: Trie }> {
   const database = parseText(completeWorks)
   return new Promise((resolve) => {
-    const entityTrie = newTrie()
-    const lexiconTrie = newTrie()
+    const entityTrie = newTrie("")
+    const lexiconTrie = newTrie("")
     ;(async () => {
       const keys = Object.keys(database.records)
       for (let i = 0; i < keys.length; i++) {
@@ -85,7 +85,8 @@ export function createIndex(
             addString(entityTrie, text.slice(i + 1), r.id, 1)
             i = text.indexOf(" ", i + 1)
           }
-        } else if (r.type === "quote") {
+        }
+        if (r.type === "quote" || r.type === "sonnet") {
           const unigrams = r.body.split(/\s+/)
           if (unigrams.length > 1) {
             for (const word of unigrams) {
@@ -99,8 +100,8 @@ export function createIndex(
           await new Promise((r) => requestAnimationFrame(r))
         }
       }
-      console.log({ entityTrie })
-      resolve({ entityTrie, database })
+      console.log({ entityTrie, lexiconTrie, database })
+      resolve({ entityTrie, database, lexiconTrie })
     })()
   })
 }
@@ -299,6 +300,7 @@ function partitionWorks(
 const DatabaseContext = React.createContext<{
   database?: Database
   entityTrie?: Trie
+  lexiconTrie?: Trie
   loadProgress: number
 }>({ loadProgress: 0 })
 
@@ -307,6 +309,7 @@ export const DatabaseProvider: React.FC<{}> = ({ children }) => {
   const [database, setDatabase] = useState<{
     database: Database
     entityTrie: Trie
+    lexiconTrie: Trie
   }>()
   useEffect(() => {
     createIndex(setLoadProgress).then((db) => {
