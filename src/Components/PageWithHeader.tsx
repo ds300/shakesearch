@@ -1,9 +1,11 @@
 /** @jsx jsx */
 import { jsx } from "@emotion/react"
+import { useHistory } from "react-router"
 import { FeatherLogoSmall } from "../FeatherLogo"
 import { SearchBox } from "./SearchBox"
 
 export const PageWithHeader: React.FC<{}> = ({ children }) => {
+  const history = useHistory()
   return (
     <div
       css={{
@@ -35,7 +37,12 @@ export const PageWithHeader: React.FC<{}> = ({ children }) => {
             zIndex: 20000,
           }}
         >
-          <div css={{ display: "flex", alignItems: "center" }}>
+          <div
+            onClick={() => {
+              history.push("/")
+            }}
+            css={{ display: "flex", alignItems: "center", cursor: "pointer" }}
+          >
             <h1 css={{ fontSize: 24, paddingRight: 20 }}>shakesearch</h1>
             <FeatherLogoSmall />
           </div>

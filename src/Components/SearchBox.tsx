@@ -91,7 +91,7 @@ export const SearchBox: React.FC<{ hideResultsWhenNotFocused?: boolean }> = ({
           <input
             ref={inputRef}
             onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
+            onBlur={() => setTimeout(() => setIsFocused(false), 200)}
             onKeyDown={(e) => {
               if (e.key === "ArrowDown") {
                 e.preventDefault()
@@ -161,7 +161,6 @@ export const SearchBox: React.FC<{ hideResultsWhenNotFocused?: boolean }> = ({
               active={activeSearchResultIndex === -1}
               onHover={() => setActiveSearchResultIndex(-1)}
               onClick={() => {
-                console.log("pushing!")
                 history.push("/results?" + stringify({ query }))
               }}
             />
