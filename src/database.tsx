@@ -7,7 +7,7 @@ import { addString, newTrie, Trie } from "./trie"
 
 export type DBRecord = Play | Sonnet | Quote | Character
 
-type ID = string
+export type ID = string
 export type Database = {
   records: Record<ID, DBRecord>
 }
