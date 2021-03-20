@@ -11,8 +11,11 @@ import { QuickSearchResult } from "./QuickSearchResult"
 import { ShowHide } from "./ShowHide"
 import { Spacer } from "./Spacer"
 import * as levenshtein from "fast-levenshtein"
+import { useHistory } from "react-router"
+import { stringify } from "qs"
 
 export const SearchBox: React.FC = () => {
+  const history = useHistory()
   const [isFocused, setIsFocused] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const { entityTrie, database } = useDatabase()
@@ -84,7 +87,11 @@ export const SearchBox: React.FC = () => {
               e.preventDefault()
               setActiveSearchResultIndex((i) => Math.max(i - 1, -1))
             } else if (e.key === "Enter") {
-              alert("enter! " + activeSearchResultIndex)
+              history.push(
+                activeSearchResultIndex === -1
+                  ? "/results?" + stringify({ query })
+                  : `/page/${searchResults[activeSearchResultIndex]}`,
+              )
             }
           }}
           onInput={async (e) => {
@@ -169,6 +176,10 @@ const ClearButton: React.FC<{ onClick(): void }> = ({ onClick }) => {
         top: 1,
         right: -5,
         cursor: "pointer",
+        transition: "transform 0.1s ease",
+        ":active": {
+          transform: "scale(0.8)",
+        },
       }}
     >
       <XIcon />
