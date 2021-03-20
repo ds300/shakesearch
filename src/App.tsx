@@ -1,7 +1,7 @@
 /** @jsx jsx */
 import { jsx } from "@emotion/react"
 import { DatabaseProvider } from "./database"
-import { Main } from "./Pages/Main"
+import { Home } from "./Pages/Home"
 import { Route, Router, Switch } from "react-router-dom"
 
 import { createBrowserHistory } from "history"
@@ -21,7 +21,7 @@ export default () => (
           <Results />
         </Route>
         <Route path="/">
-          <Main />
+          <Home />
         </Route>
       </Switch>
     </Router>

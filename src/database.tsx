@@ -1,5 +1,9 @@
+/** @jsx jsx */
+import { jsx } from "@emotion/react"
 import React, { useState, useEffect } from "react"
 import completeWorks from "../completeworks.txt?raw"
+import { ProgressBar } from "./Components/ProgressBar"
+import { ShowHide } from "./Components/ShowHide"
 import { normalizeText } from "./normalizeText"
 import { addString, newTrie, Trie } from "./trie"
 
@@ -194,7 +198,11 @@ function parsePlay(database: Database, { title, lines }: Work): Play {
         id: slug(play.title + "-" + character),
         play: play.id,
         character,
-        body: lines.slice(start, end).join("\n").trim(),
+        body: lines
+          .slice(start, end)
+          .join("\n")
+          .replace(/^.*?\./, "")
+          .trim(),
         line: start,
       }
       play.quotes.push(quote.id)
@@ -321,9 +329,43 @@ export const DatabaseProvider: React.FC<{}> = ({ children }) => {
       setLoadProgress(1)
     })
   }, [])
+  const [showingProgressBar, setShowingProgressBar] = useState(true)
+  const [showingApp, setShowingApp] = useState(false)
+  useEffect(() => {
+    if (loadProgress === 1) {
+      setShowingProgressBar(false)
+      setTimeout(() => setShowingApp(true), 700)
+    }
+  }, [loadProgress])
   return (
     <DatabaseContext.Provider value={{ loadProgress, ...database }}>
-      {children}
+      {showingApp ? (
+        children
+      ) : (
+        <div
+          css={{
+            display: "flex",
+            height: "100%",
+            flexDirection: "column",
+          }}
+        >
+          <div css={{ height: "20vh", flexShrink: 0 }}></div>
+          <ShowHide show={showingProgressBar}>
+            <div
+              css={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+              }}
+            >
+              <div css={{ paddingTop: 30, paddingBottom: 20 }}>
+                Creating search index...
+              </div>
+              <ProgressBar percentComplete={loadProgress * 100} />
+            </div>
+          </ShowHide>
+        </div>
+      )}
     </DatabaseContext.Provider>
   )
 }
