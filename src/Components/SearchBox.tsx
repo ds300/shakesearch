@@ -50,6 +50,19 @@ export const SearchBox: React.FC = () => {
           ref={inputRef}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
+          onKeyDown={(e) => {
+            if (e.key === "ArrowDown") {
+              e.preventDefault()
+              setActiveSearchResultIndex((i) =>
+                Math.min(i + 1, searchResults.length - 1),
+              )
+            } else if (e.key === "ArrowUp") {
+              e.preventDefault()
+              setActiveSearchResultIndex((i) => Math.max(i - 1, -1))
+            } else if (e.key === "Enter") {
+              alert("enter! " + activeSearchResultIndex)
+            }
+          }}
           onInput={async (e) => {
             const query = e.currentTarget.value.trim()
             setQuery(query)
