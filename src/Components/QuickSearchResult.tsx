@@ -17,9 +17,10 @@ type QuickSearchEntity =
 export const QuickSearchResult: React.FC<{
   active?: boolean
   onHover(): void
+  onClick(): void
   entityID?: ID
   query: string
-}> = ({ active, onHover, entityID, query }) => {
+}> = ({ active, onHover, entityID, query, onClick }) => {
   const database = useDatabase().database!
   const entity: QuickSearchEntity = entityID
     ? (database?.records[entityID]! as QuickSearchEntity)
@@ -29,6 +30,7 @@ export const QuickSearchResult: React.FC<{
   return (
     <div
       onMouseEnter={onHover}
+      onClick={onClick}
       css={{
         display: "flex",
         paddingLeft: 20,

@@ -137,6 +137,7 @@ export const SearchBox: React.FC = () => {
             query={query}
             active={activeSearchResultIndex === -1}
             onHover={() => setActiveSearchResultIndex(-1)}
+            onClick={() => history.push("/results?" + stringify({ query }))}
           />
           {searchResults.map((id, i) => (
             <QuickSearchResult
@@ -145,6 +146,7 @@ export const SearchBox: React.FC = () => {
               query={query}
               active={activeSearchResultIndex === i}
               onHover={() => setActiveSearchResultIndex(i)}
+              onClick={() => history.push("/page/" + id)}
             />
           ))}
         </div>
