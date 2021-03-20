@@ -14,6 +14,7 @@ const _slugs = new Set()
 const slug = (name: string): ID => {
   const slug = normalizeText(name).replace(/\W/g, "-")
   if (!_slugs.has(slug)) {
+    _slugs.add(slug)
     return slug
   }
   let i = 1
@@ -21,6 +22,7 @@ const slug = (name: string): ID => {
   while (_slugs.has(proposal)) {
     proposal = slug + "-" + i++
   }
+  _slugs.add(proposal)
 
   return proposal
 }
