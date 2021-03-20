@@ -16,7 +16,7 @@ export const Results: React.FC<{}> = () => {
   return (
     <div>
       Results for {query} at {useLocation().search}
-      {results.results.map((id) => {
+      {results.results.slice(0, 10).map((id) => {
         const record = database?.records[id]!
         switch (record.type) {
           case "sonnet":
@@ -24,9 +24,7 @@ export const Results: React.FC<{}> = () => {
               <div key={record.id}>
                 Sonnet {record.num}
                 <div>
-                  {applyHighlight(record.body, results.searchWords, (word) => (
-                    <span css={{ fontWeight: 600 }}>{word}</span>
-                  ))}
+                  {applyHighlight(record.body, results.searchWords, 50)}
                 </div>
               </div>
             )
@@ -36,9 +34,7 @@ export const Results: React.FC<{}> = () => {
                 Quote by{" "}
                 {(database?.records[record.character] as Character).name}
                 <div>
-                  {applyHighlight(record.body, results.searchWords, (word) => (
-                    <span css={{ fontWeight: 600 }}>{word}</span>
-                  ))}
+                  {applyHighlight(record.body, results.searchWords, 50)}
                 </div>
               </div>
             )
@@ -50,23 +46,30 @@ export const Results: React.FC<{}> = () => {
 
 const splitter = new GraphemeSplitter()
 
+interface Range {
+  start: number
+  end: number
+}
+interface ContextRange extends Range {
+  highlightRanges: Range[]
+}
+
 function applyHighlight(
   text: string,
   highlights: string[],
-  highightFn: (match: string) => React.ReactNode,
-) {
+  truncateContext?: number,
+): React.ReactNode {
   const textGraphemes = splitter.splitGraphemes(text)
-  const highlightRanges: Array<{ start: number; end: number }> = []
+  let highlightRanges: Range[] = []
 
   nextHighlight: for (const highlight of highlights.map((h) =>
     splitter.splitGraphemes(h),
   )) {
     nextTextOffset: for (let i = 0; i < textGraphemes.length; i++) {
-      nextHighlightChar: for (
-        let j = 0;
-        i + j < textGraphemes.length && j < highlight.length;
-        j++
-      ) {
+      nextHighlightChar: for (let j = 0; j < highlight.length; j++) {
+        if (i + j >= textGraphemes.length) {
+          continue nextHighlight
+        }
         if (
           normalizeText(textGraphemes[i + j]) !== normalizeText(highlight[j])
         ) {
@@ -93,19 +96,80 @@ function applyHighlight(
       highlightRanges[i] = prev
     }
   }
+
+  highlightRanges = uniq(highlightRanges)
+  if (!highlightRanges.length) {
+    // no highlight ranges so just return the start of the string,
+    // or the full thing of no context
+    return truncateContext
+      ? textGraphemes.slice(0, truncateContext * 2).join("")
+      : text
+  }
+
+  const contextRanges: ContextRange[] = []
+  if (truncateContext) {
+    let nextContextRange = null as ContextRange | null
+    for (const highlightRange of highlightRanges) {
+      const start = Math.max(highlightRange.start - truncateContext, 0)
+      const end = Math.min(
+        highlightRange.end + truncateContext,
+        textGraphemes.length,
+      )
+      if (nextContextRange) {
+        if (nextContextRange.end < start) {
+          contextRanges.push(nextContextRange)
+          nextContextRange = { start, end, highlightRanges: [highlightRange] }
+        } else {
+          // extend previous range
+          nextContextRange.end = end
+          nextContextRange.highlightRanges.push(highlightRange)
+        }
+      } else {
+        nextContextRange = { start, end, highlightRanges: [highlightRange] }
+      }
+    }
+    contextRanges.push(nextContextRange!)
+  } else {
+    contextRanges.push({ start: 0, end: textGraphemes.length, highlightRanges })
+  }
+
   // apply ranges
   const results: React.ReactNode[] = []
-  let offset = 0
-  for (const { start, end } of uniq(highlightRanges)) {
-    if (start > offset) {
-      results.push(textGraphemes.slice(offset, start).join(""))
-    }
-    results.push(highightFn(textGraphemes.slice(start, end).join("")))
+  for (const contextRange of contextRanges) {
+    let offset = contextRange.start
+    for (const highlightRange of contextRange.highlightRanges) {
+      if (highlightRange.start > offset) {
+        results.push(textGraphemes.slice(offset, highlightRange.start).join(""))
+      }
+      results.push(
+        highlightText(
+          textGraphemes
+            .slice(highlightRange.start, highlightRange.end)
+            .join(""),
+        ),
+      )
 
-    offset = end
-  }
-  if (offset < textGraphemes.length) {
-    results.push(textGraphemes.slice(offset))
+      offset = highlightRange.end
+    }
+    if (offset < contextRange.end) {
+      results.push(textGraphemes.slice(offset, contextRange.end))
+    }
   }
   return React.createElement(React.Fragment, null, ...results)
+}
+
+function highlightText(text: string) {
+  return (
+    <span
+      css={{
+        fontWeight: 600,
+        backgroundColor: "rgb(255, 242, 213)",
+        paddingLeft: 2,
+        paddingRight: 2,
+        borderRadius: 4,
+      }}
+    >
+      {text}
+    </span>
+  )
 }
