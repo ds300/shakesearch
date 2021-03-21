@@ -11,18 +11,19 @@ import { QuickSearchResult } from "./QuickSearchResult"
 import { ShowHide } from "./ShowHide"
 import { Spacer } from "./Spacer"
 import * as levenshtein from "fast-levenshtein"
-import { useHistory } from "react-router"
-import { stringify } from "qs"
+import { useHistory, useLocation } from "react-router"
+import { parse, stringify } from "qs"
 
 export const SearchBox: React.FC<{ hideResultsWhenNotFocused?: boolean }> = ({
   hideResultsWhenNotFocused,
 }) => {
   const history = useHistory()
+  const { query: initialQuery } = parse(useLocation().search.slice(1))
   const [isFocused, setIsFocused] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const { entityTrie, database } = useDatabase()
   const [searchResults, setSearchResults] = useState<string[]>([])
-  const [query, setQuery] = useState("")
+  const [query, setQuery] = useState((initialQuery as string) ?? "")
   const isRaised = isFocused || searchResults.length > 0
   const [activeSearchResultIndex, setActiveSearchResultIndex] = useState(-1)
   const searchResultComparator = (query: string, a: ID, b: ID) => {
@@ -90,6 +91,7 @@ export const SearchBox: React.FC<{ hideResultsWhenNotFocused?: boolean }> = ({
           <Spacer size={15} />
           <input
             ref={inputRef}
+            defaultValue={initialQuery as string}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setTimeout(() => setIsFocused(false), 200)}
             onKeyDown={(e) => {
