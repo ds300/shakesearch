@@ -26,7 +26,7 @@ export const PlayPage: React.FC<{ play: Play; line?: number }> = ({
     <PageWithHeader>
       <Toolbar title={play.title} />
       {play.body.split("\n").map((line, i) => (
-        <div id={i.toString()} css={{ marginBottom: 7, minHeight: 10 }}>
+        <div key={i} id={i.toString()} css={{ marginBottom: 7, minHeight: 10 }}>
           {line}
         </div>
       ))}
