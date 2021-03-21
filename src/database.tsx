@@ -12,23 +12,8 @@ export type DBRecord = Play | Sonnet | Quote | Character
 export type ID = string
 export type Database = {
   records: Record<ID, DBRecord>
-}
-
-const _slugs = new Set()
-const slug = (name: string): ID => {
-  const slug = normalizeText(name).replace(/\W/g, "-")
-  if (!_slugs.has(slug)) {
-    _slugs.add(slug)
-    return slug
-  }
-  let i = 1
-  let proposal = slug
-  while (_slugs.has(proposal)) {
-    proposal = slug + "-" + i++
-  }
-  _slugs.add(proposal)
-
-  return proposal
+  slugs: Set<string>
+  createSlug(s: string): string
 }
 
 export interface Play {
@@ -137,7 +122,27 @@ function parseText(text: string): Database {
     .map((line) => line.trim())
     .filter(Boolean)
 
-  const database: Database = { records: {} }
+  const slugs = new Set<string>()
+
+  const database: Database = {
+    records: {},
+    slugs,
+    createSlug(name: string) {
+      const slug = normalizeText(name).replace(/\W/g, "-")
+      if (!slugs.has(slug)) {
+        slugs.add(slug)
+        return slug
+      }
+      let i = 1
+      let proposal = slug
+      while (slugs.has(proposal)) {
+        proposal = slug + "-" + i++
+      }
+      slugs.add(proposal)
+
+      return proposal
+    },
+  }
 
   // partition lines into works
   const works = partitionWorks(lines, end, titles)
@@ -155,11 +160,11 @@ interface Work {
 function parsePlay(database: Database, { title, lines }: Work): Play {
   const play: Play = {
     type: "play",
-    id: slug(title),
+    id: database.createSlug(title),
     title: capitalizeTitle(title),
     characters: [],
     quotes: [],
-    body: lines.join("\n"),
+    body: lines.slice(1).join("\n").trim(),
   }
 
   database.records[play.id] = play
@@ -171,7 +176,7 @@ function parsePlay(database: Database, { title, lines }: Work): Play {
     } else {
       const character: Character = {
         type: "character",
-        id: slug(name),
+        id: database.createSlug(name),
         name,
         play: play.id,
         quotes: [],
@@ -197,7 +202,7 @@ function parsePlay(database: Database, { title, lines }: Work): Play {
       }
       const quote: Quote = {
         type: "quote",
-        id: slug(play.title + "-" + character.id),
+        id: database.createSlug(play.title + "-" + character.id),
         play: play.id,
         character: character.id,
         body: lines
@@ -257,7 +262,7 @@ function parseSonnets(database: Database, lines: string[]) {
       if (chunk.length) {
         const sonnet: Sonnet = {
           type: "sonnet",
-          id: slug("sonnet-" + num),
+          id: database.createSlug("sonnet-" + num),
           num,
           body: chunk.join("\n"),
         }
