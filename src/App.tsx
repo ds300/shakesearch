@@ -1,12 +1,12 @@
 /** @jsx jsx */
 import { jsx } from "@emotion/react"
 import { DatabaseProvider } from "./database"
-import { Home } from "./Pages/Home"
+import { HomePage } from "./Pages/HomePage"
 import { Route, Router, Switch } from "react-router-dom"
 
 import { createBrowserHistory } from "history"
-import { Entity } from "./Pages/Entity"
-import { Results } from "./Pages/Results"
+import { EntityPage } from "./Pages/EntityPage"
+import { ResultsPage } from "./Pages/ResultsPage"
 
 const history = createBrowserHistory()
 
@@ -15,13 +15,13 @@ export default () => (
     <Router history={history}>
       <Switch>
         <Route path="/page/:id">
-          <Entity />
+          <EntityPage />
         </Route>
         <Route path="/results">
-          <Results />
+          <ResultsPage />
         </Route>
         <Route path="/">
-          <Home />
+          <HomePage />
         </Route>
       </Switch>
     </Router>

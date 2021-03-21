@@ -26,7 +26,7 @@ const makeTabConfig = (name: string, hash: string, count: number) =>
         },
       }
     : undefined
-export const Results: React.FC<{}> = () => {
+export const ResultsPage: React.FC<{}> = () => {
   const { query, page = "1" } = parse(useLocation().search.slice(1)) as {
     query: string
     page: string

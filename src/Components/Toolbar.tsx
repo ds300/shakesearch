@@ -43,6 +43,7 @@ export const Toolbar: React.FC<{
               fontWeight: 400,
               marginBottom: 0,
               paddingRight: 40,
+              paddingBottom: 10,
             }}
           >
             {title}

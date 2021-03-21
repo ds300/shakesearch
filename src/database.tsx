@@ -61,6 +61,7 @@ export interface Character {
   id: ID
   play: ID
   name: string
+  quotes: ID[]
 }
 
 export function createIndex(
@@ -163,8 +164,8 @@ function parsePlay(database: Database, { title, lines }: Work): Play {
 
   database.records[play.id] = play
 
-  const characters: Record<string, ID> = {}
-  const findOrCreateCharacter = (name: string): ID => {
+  const characters: Record<string, Character> = {}
+  const findOrCreateCharacter = (name: string): Character => {
     if (characters[name]) {
       return characters[name]
     } else {
@@ -173,10 +174,11 @@ function parsePlay(database: Database, { title, lines }: Work): Play {
         id: slug(name),
         name,
         play: play.id,
+        quotes: []
       }
-      characters[name] = character.id
+      characters[name] = character
       database.records[character.id] = character
-      return character.id
+      return character
     }
   }
 
@@ -195,9 +197,9 @@ function parsePlay(database: Database, { title, lines }: Work): Play {
       }
       const quote: Quote = {
         type: "quote",
-        id: slug(play.title + "-" + character),
+        id: slug(play.title + "-" + character.id),
         play: play.id,
-        character,
+        character: character.id,
         body: lines
           .slice(start, end)
           .join("\n")
@@ -206,6 +208,7 @@ function parsePlay(database: Database, { title, lines }: Work): Play {
         line: start,
       }
       play.quotes.push(quote.id)
+      character.quotes.push(quote.id)
       database.records[quote.id] = quote
     }
     start++

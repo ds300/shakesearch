@@ -5,7 +5,7 @@ import { SearchBox } from "../Components/SearchBox"
 import { ShowHide } from "../Components/ShowHide"
 import { FeatherLogo } from "../FeatherLogo"
 
-export function Home() {
+export function HomePage() {
   const [didMount, setDidMount] = useState(false)
   useEffect(() => {
     setTimeout(() => setDidMount(true), 100)

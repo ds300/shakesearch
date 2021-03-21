@@ -3,7 +3,7 @@ import { jsx } from "@emotion/react"
 import GraphemeSplitter from "grapheme-splitter"
 import uniq from "lodash/uniq"
 import React from "react"
-import { Link, useHistory } from "react-router-dom"
+import { useHistory } from "react-router-dom"
 import { superLightGrey } from "../colors"
 
 import { Database, DBRecord, ID, useDatabase } from "../database"
@@ -12,6 +12,7 @@ import { QuoteIcon } from "../Icons/QuoteIcon"
 import { SonnetIcon } from "../Icons/SonnetIcon"
 import { TheaterIcon } from "../Icons/TheaterIcon"
 import { normalizeText } from "../normalizeText"
+import { getLink } from "../getLink"
 
 export const FullSearchResult: React.FC<{ id: ID; searchTerms: string[] }> = ({
   id,
@@ -99,23 +100,6 @@ const getDetails = (
         body: getLink(entity.id, database),
       }
   }
-}
-
-function getLink(id: ID, database: Database) {
-  const entity = database.records[id]
-  return (
-    <Link to={`/page/${entity.id}`}>
-      {entity.type === "sonnet"
-        ? `Sonnet ${entity.num}`
-        : entity.type === "quote"
-        ? `quote`
-        : entity.type === "character"
-        ? entity.name
-        : entity.type === "play"
-        ? entity.title
-        : "link"}
-    </Link>
-  )
 }
 
 const splitter = new GraphemeSplitter()
