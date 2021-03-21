@@ -279,6 +279,7 @@ export function normalizeText(text: string) {
       .replace(/[^\u0000-\u007E]/g, (a) => {
         return diacriticsMap[a] || a
       })
-      .replace(/[^a-zA-Z\s]/g, "")
+      .replace(/[^a-zA-Z\s\d]/g, "")
+      .trim()
   )
 }

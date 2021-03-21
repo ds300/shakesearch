@@ -128,7 +128,10 @@ function parseText(text: string): Database {
     records: {},
     slugs,
     createSlug(name: string) {
-      const slug = normalizeText(name).replace(/\W/g, "-")
+      if (name === "sonnet-1") {
+        debugger
+      }
+      const slug = name.toLocaleLowerCase().replace(/[^\w\-]/g, "-")
       if (!slugs.has(slug)) {
         slugs.add(slug)
         return slug
@@ -146,7 +149,7 @@ function parseText(text: string): Database {
 
   // partition lines into works
   const works = partitionWorks(lines, end, titles)
-  parseSonnets(database, works[0].lines.slice(1))
+  parseSonnets(database, works[0].lines.slice(2))
   for (const work of works.slice(1)) {
     if (work.title.match(/(lucrece|adonis)/i)) {
       parsePoem(database, work)
