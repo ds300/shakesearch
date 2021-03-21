@@ -174,13 +174,15 @@ function parsePoem(database: Database, { title, lines }: Work): Poem {
   return poem
 }
 function parsePlay(database: Database, { title, lines }: Work): Play {
+  const body = lines.slice(1).join("\n").trim()
+  lines = body.split("\n")
   const play: Play = {
     type: "play",
     id: database.createSlug(title),
     title: capitalizeTitle(title),
     characters: [],
     quotes: [],
-    body: lines.slice(1).join("\n").trim(),
+    body,
   }
 
   database.records[play.id] = play
