@@ -55,7 +55,7 @@ export const Toolbar: React.FC<{
               onClick={t.onClick}
               css={{
                 marginRight: 20,
-                paddingBottom: 5,
+                paddingBottom: 10,
                 paddingTop: 10,
                 cursor: "pointer",
                 borderBottom:
