@@ -24,7 +24,7 @@ export const SearchBox: React.FC<{ hideResultsWhenNotFocused?: boolean }> = ({
   const { entityTrie, database } = useDatabase()
   const [searchResults, setSearchResults] = useState<string[]>([])
   const [query, setQuery] = useState((initialQuery as string) ?? "")
-  const isRaised = isFocused || searchResults.length > 0
+  const isRaised = isFocused
   const [activeSearchResultIndex, setActiveSearchResultIndex] = useState(-1)
   const searchResultComparator = (query: string, a: ID, b: ID) => {
     const labelA = getSearchResultName(database?.records[a]!)
@@ -156,7 +156,7 @@ export const SearchBox: React.FC<{ hideResultsWhenNotFocused?: boolean }> = ({
             />
           </ShowHide>
         </div>
-        {(isFocused || !hideResultsWhenNotFocused) && searchResults.length > 0 && (
+        {(isFocused || !hideResultsWhenNotFocused) && query.length > 0 && (
           <div css={{ paddingBottom: 10 }}>
             <QuickSearchResult
               query={query}
