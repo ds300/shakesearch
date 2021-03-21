@@ -141,7 +141,7 @@ function parseText(text: string): Database {
 
   // partition lines into works
   const works = partitionWorks(lines, end, titles)
-  parseSonnets(database, works[0].lines)
+  parseSonnets(database, works[0].lines.slice(1))
   works.slice(1).map(parsePlay.bind(null, database))
 
   return database
@@ -174,7 +174,7 @@ function parsePlay(database: Database, { title, lines }: Work): Play {
         id: slug(name),
         name,
         play: play.id,
-        quotes: []
+        quotes: [],
       }
       characters[name] = character
       database.records[character.id] = character
@@ -250,7 +250,7 @@ function capitalizeTitle(title: string) {
 
 function parseSonnets(database: Database, lines: string[]) {
   let chunk: string[] = []
-  let num = 0
+  let num = 1
   for (let line of lines) {
     line = line.trim()
     if (line.match(/^\d+$/)) {
