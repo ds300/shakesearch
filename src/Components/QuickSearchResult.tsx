@@ -6,7 +6,7 @@ import { superLightGrey } from "../colors"
 import { Database, DBRecord, ID, Play, useDatabase } from "../database"
 import { CharacterIcon } from "../Icons/CharacterIcon"
 import { SearchIcon } from "../Icons/SearchIcon"
-import { SonnetIcon } from "../Icons/SonnetIcon"
+import { PoemIcon } from "../Icons/PoemIcon"
 import { TheaterIcon } from "../Icons/TheaterIcon"
 import { normalizeText } from "../normalizeText"
 
@@ -57,8 +57,8 @@ function getIcon(entity: QuickSearchEntity) {
       return <CharacterIcon />
     case "play":
       return <TheaterIcon />
-    case "sonnet":
-      return <SonnetIcon />
+    case "poem":
+      return <PoemIcon />
     default:
       assertNever(entity)
   }
@@ -93,8 +93,8 @@ function getLabel({
           {applyHighlight(entity.title, query)}
         </div>
       )
-    case "sonnet":
-      return applyHighlight(`Sonnet ${entity.num}`, query)
+    case "poem":
+      return applyHighlight(entity.title, query)
     default:
       assertNever(entity)
   }

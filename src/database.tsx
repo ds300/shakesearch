@@ -7,7 +7,7 @@ import { ShowHide } from "./Components/ShowHide"
 import { normalizeText } from "./normalizeText"
 import { addString, newTrie, Trie } from "./trie"
 
-export type DBRecord = Play | Sonnet | Quote | Character
+export type DBRecord = Play | Poem | Quote | Character
 
 export type ID = string
 export type Database = {
@@ -25,10 +25,10 @@ export interface Play {
   quotes: ID[]
 }
 
-export interface Sonnet {
-  type: "sonnet"
+export interface Poem {
+  type: "poem"
   id: ID
-  num: number
+  title: string
   body: string
 }
 
@@ -65,8 +65,8 @@ export function createIndex(
             ? r.name
             : r.type === "play"
             ? r.title
-            : r.type === "sonnet"
-            ? `Sonnet ${r.num}`
+            : r.type === "poem"
+            ? r.title
             : null
 
         if (val) {
@@ -82,7 +82,7 @@ export function createIndex(
             addString(lexiconTrie, word, r.id, 1)
           }
         }
-        if (r.type === "quote" || r.type === "sonnet") {
+        if (r.type === "quote" || r.type === "poem") {
           const unigrams = normalizeText(r.body).split(/\s+/)
           for (const word of unigrams) {
             addString(lexiconTrie, word, r.id, 1)
@@ -147,7 +147,13 @@ function parseText(text: string): Database {
   // partition lines into works
   const works = partitionWorks(lines, end, titles)
   parseSonnets(database, works[0].lines.slice(1))
-  works.slice(1).map(parsePlay.bind(null, database))
+  for (const work of works.slice(1)) {
+    if (work.title.match(/(lucrece|adonis)/i)) {
+      parsePoem(database, work)
+    } else {
+      parsePlay(database, work)
+    }
+  }
 
   return database
 }
@@ -157,6 +163,16 @@ interface Work {
   lines: string[]
 }
 
+function parsePoem(database: Database, { title, lines }: Work): Poem {
+  const poem: Poem = {
+    type: "poem",
+    id: database.createSlug(title),
+    title: capitalizeTitle(title),
+    body: lines.join("\n").trim(),
+  }
+  database.records[poem.id] = poem
+  return poem
+}
 function parsePlay(database: Database, { title, lines }: Work): Play {
   const play: Play = {
     type: "play",
@@ -263,10 +279,10 @@ function parseSonnets(database: Database, lines: string[]) {
     line = line.trim()
     if (line.match(/^\d+$/)) {
       if (chunk.length) {
-        const sonnet: Sonnet = {
-          type: "sonnet",
+        const sonnet: Poem = {
+          type: "poem",
           id: database.createSlug("sonnet-" + num),
-          num,
+          title: `Sonnet ${num}`,
           body: chunk.join("\n"),
         }
         database.records[sonnet.id] = sonnet

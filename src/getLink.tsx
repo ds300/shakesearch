@@ -7,8 +7,8 @@ export function getLink(id: ID, database: Database) {
   const entity = database.records[id]
   return (
     <Link to={`/page/${entity.id}`}>
-      {entity.type === "sonnet"
-        ? `Sonnet ${entity.num}`
+      {entity.type === "poem"
+        ? entity.title
         : entity.type === "quote"
         ? `quote`
         : entity.type === "character"

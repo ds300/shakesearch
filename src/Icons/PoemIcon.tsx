@@ -1,6 +1,6 @@
 import React from "react"
 
-export const SonnetIcon: React.FC<{}> = ({}) => {
+export const PoemIcon: React.FC<{}> = ({}) => {
   return (
     <svg
       width="15"

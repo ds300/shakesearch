@@ -189,8 +189,8 @@ const getSearchResultName = (record: DBRecord) => {
       return normalizeText(record.title)
     case "character":
       return normalizeText(record.name)
-    case "sonnet":
-      return "sonnet " + record.num
+    case "poem":
+      return normalizeText(record.title)
     default:
       return ""
   }

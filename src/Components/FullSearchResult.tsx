@@ -9,7 +9,7 @@ import { superLightGrey } from "../colors"
 import { Database, DBRecord, ID, useDatabase } from "../database"
 import { CharacterIcon } from "../Icons/CharacterIcon"
 import { QuoteIcon } from "../Icons/QuoteIcon"
-import { SonnetIcon } from "../Icons/SonnetIcon"
+import { PoemIcon } from "../Icons/PoemIcon"
 import { TheaterIcon } from "../Icons/TheaterIcon"
 import { normalizeText } from "../normalizeText"
 import { getLink } from "../getLink"
@@ -96,9 +96,9 @@ const getDetails = (
         label: getLink(entity.id, database),
         body: null,
       }
-    case "sonnet":
+    case "poem":
       return {
-        icon: <SonnetIcon />,
+        icon: <PoemIcon />,
         label: applyHighlight(entity.body, highlightTerms, 45),
         body: getLink(entity.id, database),
       }

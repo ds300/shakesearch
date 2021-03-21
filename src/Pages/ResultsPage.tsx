@@ -44,7 +44,7 @@ export const ResultsPage: React.FC<{}> = () => {
     makeTabConfig("All", "all", results.all.length),
     makeTabConfig("Quotes", "quote", results.quote.length),
     makeTabConfig("Characters", "character", results.character.length),
-    makeTabConfig("Sonnets", "sonnet", results.sonnet.length),
+    makeTabConfig("Poems", "poem", results.poem.length),
     makeTabConfig("Plays", "play", results.play.length),
   ])
 
@@ -81,9 +81,11 @@ export const ResultsPage: React.FC<{}> = () => {
           <div css={{ fontSize: 14, color: darkGrey, marginBottom: 5 }}>
             No results found for "{originalSearchString}"
           </div>
-          <div css={{marginBottom: 10, fontStyle: 'italic'}}>
+          <div css={{ marginBottom: 10, fontStyle: "italic" }}>
             Showing results for{" "}
-            <span css={{ fontWeight: 600, fontStyle: 'normal' }}>"{actualSearchString}"</span>
+            <span css={{ fontWeight: 600, fontStyle: "normal" }}>
+              "{actualSearchString}"
+            </span>
           </div>
         </div>
       )}

@@ -12,7 +12,7 @@ export function fullTextSearch(
   const searchResults = {
     results: {
       all: [] as ID[],
-      sonnet: [] as ID[],
+      poem: [] as ID[],
       play: [] as ID[],
       character: [] as ID[],
       quote: [] as ID[],
