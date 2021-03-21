@@ -6,6 +6,7 @@ type Terminal = [term: string, freq: number]
 
 export type Trie = {
   freq: number
+  termFreq: number
   prefix: string
   terminals: Record<string, number>
   children: {
@@ -13,7 +14,7 @@ export type Trie = {
   }
 }
 export function newTrie(prefix: string): Trie {
-  return { freq: 0, prefix, children: {}, terminals: {} }
+  return { freq: 0, termFreq: 0, prefix, children: {}, terminals: {} }
 }
 export function addString(
   trie: Trie,
@@ -37,50 +38,7 @@ export function addString(
   } else {
     node.terminals[terminalString] = freq
   }
-}
-export function getFrequency(trie: Trie, searchString: string) {
-  let node = trie
-  for (let i = 0; i < searchString.length; i++) {
-    const char = searchString[i]
-    let child = node.children[char]
-    if (!child) {
-      return 0
-    }
-    node = child
-  }
-  return node.freq
-}
-
-export function findMostFrequent(trie: Trie, searchString: string, n: number) {
-  let node = trie
-  for (let i = 0; i < searchString.length; i++) {
-    const char = searchString[i]
-    let child = node.children[char]
-    if (!child) {
-      return []
-    }
-    node = child
-  }
-  const terminals = findAllTerminals(node)
-  terminals.sort(([_, a], [__, b]) => b - a)
-  return (
-    terminals
-      // dedupe
-      .filter(([val], i) => (terminals[i - 1] || [])[0] !== val)
-      .slice(0, n)
-      .map(([val]) => val)
-  )
-}
-
-function findAllTerminals(node: Trie, result: Terminal[] = []) {
-  if (node.terminals.length) {
-    result.push(...Object.entries(node.terminals))
-  }
-  for (const k of Object.keys(node.children)) {
-    findAllTerminals(node.children[k]!, result)
-  }
-
-  return result
+  node.termFreq += freq
 }
 
 function swapChars(s: string, i: number, j: number) {

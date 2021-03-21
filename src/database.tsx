@@ -196,8 +196,11 @@ function parsePlay(database: Database, { title, lines }: Work): Play {
       const character = findOrCreateCharacter(
         capitalizeTitle(characterMatch.toLowerCase()),
       )
-      let end = start + 2
-      while (end < lines.length && lines[end].trim() !== "") {
+      let end = start + 1
+      if (line.match(/\.$/) && lines[end].trim() === "") {
+        end = start + 2
+      }
+      while (end < lines.length && !lines[end].match(/^([A-Z ]+)\./)) {
         end++
       }
       const quote: Quote = {
