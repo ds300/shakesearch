@@ -5,7 +5,7 @@ import { parse, stringify } from "qs"
 import React, { useEffect, useMemo } from "react"
 import { useLocation } from "react-router"
 import { Link } from "react-router-dom"
-import { superLightGrey } from "../colors"
+import { darkGrey, superLightGrey } from "../colors"
 import { FullSearchResult } from "../Components/FullSearchResult"
 import { PageWithHeader } from "../Components/PageWithHeader"
 import { Toolbar } from "../Components/Toolbar"
@@ -35,7 +35,7 @@ export const ResultsPage: React.FC<{}> = () => {
     | DBRecord["type"]
     | "all"
   const { lexiconTrie, database } = useDatabase()
-  const { results, searchWords } = useMemo(
+  const { results, searchWords, originalWords } = useMemo(
     () => fullTextSearch(lexiconTrie!, database!, query as string),
     [database, query, lexiconTrie],
   )
@@ -59,6 +59,9 @@ export const ResultsPage: React.FC<{}> = () => {
     (pageIndex + 1) * RESULTS_PER_PAGE,
   )
 
+  const originalSearchString = originalWords.join(" ")
+  const actualSearchString = searchWords.join(" ")
+
   useEffect(() => {
     console.log("scrolling")
     window.scrollTo(0, 0)
@@ -70,6 +73,20 @@ export const ResultsPage: React.FC<{}> = () => {
         tabs={tabs}
         activeTabIndex={tabs.findIndex((t) => t.id === hash)}
       />
+      {!resultsPage.length && (
+        <div>No results found for "{originalSearchString}"</div>
+      )}
+      {resultsPage.length && originalSearchString !== actualSearchString && (
+        <div>
+          <div css={{ fontSize: 14, color: darkGrey, marginBottom: 5 }}>
+            No results found for "{originalSearchString}"
+          </div>
+          <div css={{marginBottom: 10, fontStyle: 'italic'}}>
+            Showing results for{" "}
+            <span css={{ fontWeight: 600, fontStyle: 'normal' }}>"{actualSearchString}"</span>
+          </div>
+        </div>
+      )}
       {resultsPage.slice(0, 10).map((id) => {
         return <FullSearchResult key={id} id={id} searchTerms={searchWords} />
       })}
