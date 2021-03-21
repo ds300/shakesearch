@@ -15,7 +15,6 @@ export function Home() {
     <div
       css={{
         display: "flex",
-        height: "100%",
         flexDirection: "column",
       }}
     >
