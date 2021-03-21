@@ -35,11 +35,13 @@ export const FullSearchResult: React.FC<{ id: ID; searchTerms: string[] }> = ({
         cursor: "pointer",
         paddingTop: 15,
         paddingBottom: 15,
+        marginBottom: 10,
         borderRadius: 6,
         marginLeft: -10,
         marginRight: -10,
         paddingLeft: 10,
         paddingRight: 10,
+        fontSize: 14,
       }}
     >
       <div
@@ -69,13 +71,14 @@ const getDetails = (
     case "quote":
       return {
         icon: <QuoteIcon />,
-        label: (
+        body: (
           <div>
+            {" – "}
             {getLink(entity.character, database)} in{" "}
             {getLink(entity.play, database)}
           </div>
         ),
-        body: applyHighlight(entity.body, searchTerms, 45),
+        label: applyHighlight(entity.body, searchTerms, 45),
       }
     case "character":
       return {
@@ -92,8 +95,8 @@ const getDetails = (
     case "sonnet":
       return {
         icon: <SonnetIcon />,
-        label: getLink(entity.id, database),
-        body: applyHighlight(entity.body, searchTerms, 45),
+        label: applyHighlight(entity.body, searchTerms, 45),
+        body: getLink(entity.id, database),
       }
   }
 }
