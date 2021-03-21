@@ -68,9 +68,6 @@ const getDetails = (
   body: React.ReactNode
   icon: React.ReactNode
 } => {
-  const highlightTerms = searchTerms.some((term) => term.length < 4)
-    ? [searchTerms.join(" ")]
-    : searchTerms
   switch (entity.type) {
     case "quote":
       return {
@@ -82,7 +79,7 @@ const getDetails = (
             {getLink(entity.play, database)}
           </div>
         ),
-        label: applyHighlight(entity.body, highlightTerms, 45),
+        label: applyHighlight(entity.body, searchTerms, 45),
       }
     case "character":
       return {
@@ -99,7 +96,7 @@ const getDetails = (
     case "poem":
       return {
         icon: <PoemIcon />,
-        label: applyHighlight(entity.body, highlightTerms, 45),
+        label: applyHighlight(entity.body, searchTerms, 45),
         body: getLink(entity.id, database),
       }
   }
@@ -144,6 +141,14 @@ function applyHighlight(
 
   if (highlightRanges.length === 0) {
     return text.slice(0, (truncateContext ?? text.length) * 2)
+  } else if (highlightRanges.length > Math.max(highlights.length, 4)) {
+    // sort ranges by length and cull
+    highlightRanges.sort((a, b) => {
+      const aLength = a.end - a.start
+      const bLength = b.end - b.start
+      return bLength - aLength
+    })
+    highlightRanges.length = Math.max(highlights.length, 4)
   }
 
   // sort ranges by start time
